@@ -1,0 +1,22 @@
+{
+  "name": "agent-lighthouse",
+  "version": "1.0.0",
+  "description": "CLI for Agent Lighthouse — audit websites for AI Agent Readiness from the terminal",
+  "type": "module",
+  "bin": {
+    "agent-lighthouse": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@agent-lighthouse/core": "workspace:*",
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3"
+  }
+}
