@@ -17,5 +17,8 @@
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": "22.x"
+  },
+  "dependencies": {
+    "esbuild": "^0.28.0"
   }
 }

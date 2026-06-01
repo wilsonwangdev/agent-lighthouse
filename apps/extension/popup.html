@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Agent Lighthouse</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 400px;
+      min-height: 300px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0a0a0b;
+      color: #fafafa;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { padding: 16px; }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #27272a;
+    }
+    .header svg { width: 20px; height: 20px; color: #6366f1; }
+    .header h1 { font-size: 14px; font-weight: 600; }
+    .header .version { font-size: 10px; color: #52525b; margin-left: auto; }
+
+    .url-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .url-bar input {
+      flex: 1;
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid #27272a;
+      background: #111113;
+      color: #fafafa;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .url-bar input:focus { border-color: #6366f1; }
+    .url-bar input::placeholder { color: #52525b; }
+    .url-bar button {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 8px;
+      border: none;
+      background: #6366f1;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .url-bar button:hover { background: #5558e6; }
+    .url-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .quick-actions {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .quick-actions button {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #27272a;
+      background: #111113;
+      color: #a1a1aa;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .quick-actions button:hover { border-color: #3f3f46; color: #fafafa; }
+
+    /* Results */
+    .result { display: none; }
+    .result.show { display: block; }
+
+    .score-banner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      border-radius: 12px;
+      background: #111113;
+      border: 1px solid #27272a;
+      margin-bottom: 12px;
+    }
+    .score-circle {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .score-info h3 { font-size: 13px; margin-bottom: 4px; }
+    .score-info p { font-size: 11px; color: #a1a1aa; line-height: 1.4; }
+    .score-info .url { font-size: 10px; color: #52525b; margin-top: 4px; word-break: break-all; }
+
+    .categories {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .cat-card {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #111113;
+      border: 1px solid #27272a;
+    }
+    .cat-card .cat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .cat-card .cat-name { font-size: 11px; font-weight: 500; }
+    .cat-card .cat-score { font-size: 16px; font-weight: 700; }
+    .cat-card .cat-bar {
+      height: 3px;
+      border-radius: 2px;
+      background: #27272a;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .cat-card .cat-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+    .cat-card .cat-passed { font-size: 9px; color: #52525b; }
+
+    .checks-section { margin-bottom: 12px; }
+    .checks-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #a1a1aa;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 11px;
+    }
+    .check-row .status { width: 16px; text-align: center; font-size: 10px; }
+    .check-row .name { flex: 1; color: #a1a1aa; }
+    .check-row .url-link {
+      color: #52525b;
+      text-decoration: none;
+      font-size: 9px;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .check-row .url-link:hover { color: #a1a1aa; }
+    .check-row .score { color: #71717a; font-family: monospace; font-size: 10px; min-width: 28px; text-align: right; }
+
+    .loading {
+      text-align: center;
+      padding: 40px 0;
+      color: #71717a;
+      display: none;
+    }
+    .loading.show { display: block; }
+    .spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 2px solid #27272a;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-bottom: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg { display: none; text-align: center; padding: 24px; color: #ef4444; font-size: 12px; }
+    .error-msg.show { display: block; }
+
+    .footer {
+      text-align: center;
+      font-size: 9px;
+      color: #3f3f46;
+      padding-top: 8px;
+      border-top: 1px solid #27272a;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L4 7v10l8 5 8-5V7l-8-5z" stroke-linejoin="round"/>
+        <path d="M12 9l-4 2.5v5l4 2.5 4-2.5v-5L12 9z" fill="currentColor" opacity="0.3"/>
+      </svg>
+      <h1>Agent Lighthouse</h1>
+      <span class="version">v1.0.0</span>
+    </div>
+
+    <!-- URL Input -->
+    <div class="url-bar">
+      <input type="text" id="urlInput" placeholder="Enter URL or use current page">
+      <button id="auditBtn">▶ Audit</button>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button id="auditCurrent">📍 This Page</button>
+      <button id="auditVercel">Vercel</button>
+      <button id="auditGitHub">GitHub</button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p style="font-size:11px">Auditing...</p>
+    </div>
+
+    <!-- Error -->
+    <div id="error" class="error-msg"></div>
+
+    <!-- Results -->
+    <div id="result" class="result">
+      <!-- Score Banner -->
+      <div class="score-banner">
+        <div class="score-circle" id="scoreCircle">--</div>
+        <div class="score-info">
+          <h3 id="gradeLabel">--</h3>
+          <p id="summaryText"></p>
+          <p class="url" id="auditedUrl"></p>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="categories" id="categories"></div>
+
+      <!-- Checks -->
+      <div class="checks-section">
+        <div class="checks-title">All Checks</div>
+        <div id="checks"></div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        Powered by ora Agent Readiness Framework
+      </div>
+    </div>
+  </div>
+
+  <script src="engine.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
